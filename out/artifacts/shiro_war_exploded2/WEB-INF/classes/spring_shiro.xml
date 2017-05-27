@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+">
+
+
+<!-- 配置核心 securityManager-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="cacheManager" ref="cacheManager"/>
+        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="realm" ref="jdbcRealm"/>
+        <property name="authenticator" ref="modularRealmAuthenticator"></property>
+        <property name="sessionManager" ref="sessionManager"/>
+        <property name="authorizer" ref="authorizer"></property>
+    </bean>
+<!-- 会话管理 -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="sessionIdUrlRewritingEnabled" value="false"/>
+    </bean>
+<!--授权-->
+    <bean id="authorizer" class="xchihuo.cn.shiro.reaml.AuthorRealm">
+
+    </bean>
+
+
+<!-- 缓存 -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+
+        <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"></property>
+    </bean>
+
+<!-- md5 加密-->
+    <bean id="jdbcRealm" class="xchihuo.cn.shiro.reaml.ShiroReaml">
+        <property name="credentialsMatcher">
+            <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                <property name="hashAlgorithmName" value="MD5"></property>
+                <property name="hashIterations" value="10"></property>
+            </bean>
+        </property>
+    </bean>
+    <!-- sha1加密-->
+
+    <bean id="sha1Realm" class="xchihuo.cn.shiro.reaml.Sha1Realm">
+        <property name="credentialsMatcher">
+            <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+                <property name="hashAlgorithmName" value="sha1"></property>
+                <property name="hashIterations" value="10"></property>
+
+            </bean>
+
+        </property>
+
+    </bean>
+        <!-- 认证器 -->
+    <bean id="modularRealmAuthenticator" class="org.apache.shiro.authc.pam.ModularRealmAuthenticator">
+        <property name="realms">
+            <list>
+                <ref bean="jdbcRealm"></ref>
+                <ref bean="sha1Realm"></ref>
+            </list>
+        </property>
+        <!-- 认证策略-->
+        <property name="authenticationStrategy" ref="authenticationStrategy"></property>
+
+    </bean>
+    <bean id="authenticationStrategy" class="org.apache.shiro.authc.pam.FirstSuccessfulStrategy"></bean>
+
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- Enable Shiro Annotations for Spring-configured beans.  Only run after
+         the lifecycleBeanProcessor has run: -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+<!--过滤器 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/index.jsp"/>
+        <property name="successUrl" value="/success.jsp"/>
+        <property name="unauthorizedUrl" value="/unauthorizedUrl.jsp"/>
+        <property name="filterChainDefinitionMap" ref="urlFilterMap"></property>
+    </bean>
+    <!--urlfilterFactory创建-->
+    <bean id="urlFilterMap" factory-bean="builderFactory" factory-method="builderUrlFilterMap"></bean>
+    <bean id="builderFactory" class="xchihuo.cn.shiro.utils.UrlfilterMapfactory"></bean>
+</beans>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+
+    <!--配置 securityManager-->
+    <bean id="securityManager" class="org.apache.shiro.mgt.DefaultSecurityManager">
+        <property name="cacheManager" ref="cacheManager"></property>
+        <property name="realm" ref="jdbcRealm"></property>
+        <property name="sessionManager" ref="sessionManager"></property>
+    </bean>
+
+    <!--配置缓存-->
+
+
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!--   <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"></property>-->
+    </bean>
+    <bean id="jdbcRealm" class="xchihuo.cn.shiro.reaml.ShiroReaml"/>
+
+    <!--配置 sessionManager-->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="sessionIdUrlRewritingEnabled" value="false"></property>
+
+
+    </bean>
+
+    <!-- 使application 能够自动的使用init()and destroy()-->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"></bean>
+    <!--配置 注解 要先配置lifCyclebean-->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"
+    >
+    </bean>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"></property>
+    </bean>
+
+
+    <!-- 配置资源权限 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"></property>
+        <property name="loginUrl" value="/index.jsp"></property>
+        <property name="successUrl" value="/success.jsp"></property>
+        <property name="unauthorizedUrl" value="/unauthorizedUrl.jsp"></property>
+        <property name="filterChainDefinitions">
+            <value>
+                /index.jsp = anon
+                /** = authc
+            </value>
+
+        </property>
+
+    </bean>
+</beans>
